@@ -14,11 +14,16 @@ def validate_schema(response, schema_name):
     jsonschema.validate(response.json(), schema)
 
 
+def should_keep_alive_connection(response):
+    assert response.headers.get("connection") == "keep-alive"
+
+
 def test_get_users():
     response = requests.get(base_url+"/users")
 
     assert response.status_code == 200
     validate_schema(response, "get_users.json")
+    should_keep_alive_connection(response)
 
 
 def test_get_users_per_page():
@@ -28,12 +33,14 @@ def test_get_users_per_page():
     assert len(response.json()["data"]) == 1
     assert response.json()["per_page"] == 1
     validate_schema(response, "get_users.json")
+    should_keep_alive_connection(response)
 
 
 def test_nonexisting_user():
     response = requests.get(url=base_url+"/users/23")
 
     assert response.status_code == 404
+    should_keep_alive_connection(response)
 
 
 def test_headers():
@@ -42,9 +49,9 @@ def test_headers():
     headers.update(bearer)
     response = requests.get(url=base_url+"/users", headers=headers)
 
-    assert response.headers.get("connection") == "keep-alive"
     assert response.status_code == 200
     validate_schema(response, "get_users.json")
+    should_keep_alive_connection(response)
 
 
 def test_post_users_schema_validation():
@@ -58,6 +65,7 @@ def test_post_users_schema_validation():
 
     assert response.status_code == 201
     validate_schema(response, "post_users.json")
+    should_keep_alive_connection(response)
 
 
 def test_update_user():
@@ -70,14 +78,16 @@ def test_update_user():
     )
 
     assert response.status_code == 200
-    print(response.json())
     assert response.json()["job"] == "zion resident"
     validate_schema(response, "put_users.json")
+    should_keep_alive_connection(response)
 
 
 def test_delete_user():
     response = requests.delete(url=base_url+"/users/2")
+
     assert response.status_code == 204
+    should_keep_alive_connection(response)
 
 
 def test_signup_success():
@@ -93,6 +103,7 @@ def test_signup_success():
     assert response.json()["id"] == 4
     assert response.json()["token"] == "QpwL5tke4Pnpja7X4"
     validate_schema(response, "post_register.json")
+    should_keep_alive_connection(response)
 
 
 def test_signup_failure():
@@ -106,6 +117,7 @@ def test_signup_failure():
     assert response.status_code == 400
     assert response.json()["error"] == "Missing password"
     validate_schema(response, "post_register_error.json")
+    should_keep_alive_connection(response)
 
 
 def test_login_success():
@@ -120,6 +132,7 @@ def test_login_success():
     assert response.status_code == 200
     assert response.json()["token"] == "QpwL5tke4Pnpja7X4"
     validate_schema(response, "post_login.json")
+    should_keep_alive_connection(response)
 
 
 def test_login_failure():
@@ -133,3 +146,4 @@ def test_login_failure():
     assert response.status_code == 400
     assert response.json()["error"] == "Missing password"
     validate_schema(response, "post_login_error.json")
+    should_keep_alive_connection(response)
