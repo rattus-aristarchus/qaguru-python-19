@@ -1,12 +1,33 @@
 import jsonschema
+import pytest
 import requests
 
 from utils import load_schema
 
-#TODO проверку схемы ко всем тестам
-
-
 base_url = "https://reqres.in/api"
+
+
+@pytest.fixture
+def user_data():
+    return {
+        "name": "morpheus",
+        "job": "zion resident"
+    }
+
+
+@pytest.fixture
+def credentials():
+    return {
+        "email": "eve.holt@reqres.in",
+        "password": "pistol"
+    }
+
+
+@pytest.fixture
+def incomplete_credentials():
+    return {
+        "email": "eve.holt@reqres.in",
+    }
 
 
 def validate_schema(response, schema_name):
@@ -54,33 +75,29 @@ def test_headers():
     should_keep_alive_connection(response)
 
 
-def test_post_users_schema_validation():
+def test_create_user(user_data):
     response = requests.post(
         url=base_url+"/users",
-        json={
-            "name": "morpheus",
-            "job": "leader"
-        }
+        json=user_data
     )
 
     assert response.status_code == 201
     validate_schema(response, "post_users.json")
     should_keep_alive_connection(response)
+    assert response.json()["name"] == user_data["name"]
+    assert response.json()["job"] == user_data["job"]
 
 
-def test_update_user():
+def test_update_user(user_data):
     response = requests.put(
         url=base_url+"/users/2",
-        json={
-            "name": "morpheus",
-            "job": "zion resident"
-        }
+        json=user_data
     )
 
     assert response.status_code == 200
-    assert response.json()["job"] == "zion resident"
     validate_schema(response, "put_users.json")
     should_keep_alive_connection(response)
+    assert response.json()["job"] == user_data["job"]
 
 
 def test_delete_user():
@@ -90,13 +107,10 @@ def test_delete_user():
     should_keep_alive_connection(response)
 
 
-def test_signup_success():
+def test_signup_success(credentials):
     response = requests.post(
         url=base_url+"/register",
-        json={
-            "email": "eve.holt@reqres.in",
-            "password": "pistol"
-        }
+        json=credentials
     )
 
     assert response.status_code == 200
@@ -106,12 +120,10 @@ def test_signup_success():
     should_keep_alive_connection(response)
 
 
-def test_signup_failure():
+def test_signup_failure(incomplete_credentials):
     response = requests.post(
         url=base_url+"/register",
-        json={
-            "email": "sydney@fife"
-        }
+        json=incomplete_credentials
     )
 
     assert response.status_code == 400
@@ -120,13 +132,10 @@ def test_signup_failure():
     should_keep_alive_connection(response)
 
 
-def test_login_success():
+def test_login_success(credentials):
     response = requests.post(
         url=base_url+"/login",
-        json={
-            "email": "eve.holt@reqres.in",
-            "password": "cityslicka"
-        }
+        json=credentials
     )
 
     assert response.status_code == 200
@@ -135,12 +144,10 @@ def test_login_success():
     should_keep_alive_connection(response)
 
 
-def test_login_failure():
+def test_login_failure(incomplete_credentials):
     response = requests.post(
         url=base_url+"/login",
-        json={
-            "email": "peter@klaven"
-        }
+        json=incomplete_credentials
     )
 
     assert response.status_code == 400
